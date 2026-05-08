@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AI & Crypto News Aggregator - Stay updated with the latest news">
+    <title>AI & Crypto News Aggregator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #6366f1;
+            --secondary: #8b5cf6;
+            --accent: #ec4899;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --bg-light: #f9fafb;
+            --bg-white: #ffffff;
+            --border: #e5e7eb;
+            --success: #10b981;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+                'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .app {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 3rem 1rem;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            font-weight: 800;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        /* Main */
+        main {
+            flex: 1;
+            max-width: 1400px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        /* Controls */
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .controls h2 {
+            font-size: 1.8rem;
+        }
+
+        .refresh-btn {
+            background-color: var(--success);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .refresh-btn:hover:not(:disabled) {
+            background-color: #059669;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .refresh-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Filters */
+        .filters {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 0.5rem 1rem;
+            border: 2px solid var(--border);
+            background-color: var(--bg-white);
+            color: var(--text-primary);
+            border-radius: 2rem;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .filter-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .filter-btn.active {
+            background-color: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        /* Status Messages */
+        .loading {
+            text-align: center;
+            padding: 3rem 1rem;
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+        }
+
+        .loading::after {
+            content: '';
+            animation: dots 1.5s steps(4, end) infinite;
+        }
+
+        @keyframes dots {
+            0%, 20% { content: ''; }
+            40% { content: '.'; }
+            60% { content: '..'; }
+            80%, 100% { content: '...'; }
+        }
+
+        .error-message {
+            background-color: #fee2e2;
+            color: #991b1b;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1.5rem;
+            border-left: 4px solid #dc2626;
+        }
+
+        .no-articles {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        /* Articles Grid */
+        .articles-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+        }
+
+        /* Article Card */
+        .article-card {
+            background-color: var(--bg-white);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .article-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transform: translateY(-4px);
+            border-color: var(--primary);
+        }
+
+        .article-header {
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .article-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            line-height: 1.4;
+            margin: 0;
+            flex: 1;
+        }
+
+        .article-source {
+            background-color: var(--primary);
+            color: white;
+            padding: 0.3rem 0.75rem;
+            border-radius: 2rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            white-space: nowrap;
+            text-transform: uppercase;
+        }
+
+        .article-description {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.5;
+            margin-bottom: 1rem;
+            flex: 1;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .article-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: auto;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .article-date {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .read-more {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+
+        .read-more:hover {
+            color: var(--secondary);
+        }
+
+        /* Footer */
+        footer {
+            background-color: var(--text-primary);
+            color: white;
+            text-align: center;
+            padding: 1.5rem;
+            margin-top: auto;
+            font-size: 0.9rem;
+        }
+
+        /* Modal for Article Detail */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background-color: var(--bg-white);
+            margin: 5% auto;
+            padding: 2rem;
+            border-radius: 1rem;
+            width: 90%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 2rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.3s ease;
+        }
+
+        .modal-close:hover {
+            color: var(--text-primary);
+        }
+
+        .modal-title {
+            flex: 1;
+            margin-right: 1rem;
+        }
+
+        .modal-title h2 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .modal-meta {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .modal-source {
+            background-color: var(--primary);
+            color: white;
+            padding: 0.3rem 0.75rem;
+            border-radius: 2rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+        }
+
+        .modal-description {
+            color: var(--text-primary);
+            line-height: 1.8;
+            margin-bottom: 1.5rem;
+            font-size: 1rem;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+        }
+
+        .modal-btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+        }
+
+        .modal-btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .modal-btn-primary:hover {
+            background-color: var(--secondary);
+        }
+
+        .modal-btn-secondary {
+            background-color: var(--border);
+            color: var(--text-primary);
+        }
+
+        .modal-btn-secondary:hover {
+            background-color: var(--text-secondary);
+            color: white;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 1.8rem;
+            }
+
+            .subtitle {
+                font-size: 0.95rem;
+            }
+
+            main {
+                padding: 1rem;
+            }
+
+            .articles-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .refresh-btn {
+                width: 100%;
+            }
+
+            .filters {
+                width: 100%;
+            }
+
+            .modal-content {
+                width: 95%;
+                margin: 20% auto;
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <header>
+            <h1>🤖 AI & Crypto News</h1>
+            <p class="subtitle">Stay updated with the latest in AI and cryptocurrency</p>
+        </header>
+
+        <main>
+            <div class="controls">
+                <h2>Latest News</h2>
+                <button class="refresh-btn" id="refreshBtn">Refresh</button>
+            </div>
+
+            <div class="filters" id="filters"></div>
+
+            <div id="error" class="error-message" style="display: none;"></div>
+            <div id="loading" class="loading">Loading articles</div>
+            <div id="noArticles" class="no-articles" style="display: none;">No articles found. Try refreshing the feed.</div>
+            <div id="articlesGrid" class="articles-grid"></div>
+        </main>
+
+        <footer>
+            <p>&copy; 2024 AI & Crypto News Aggregator. Built with FastAPI & Vanilla JavaScript.</p>
+        </footer>
+    </div>
+
+    <!-- Modal for Article Detail -->
+    <div id="articleModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <h2 id="modalTitle"></h2>
+                </div>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-meta">
+                <span class="modal-source" id="modalSource"></span>
+                <span id="modalDate"></span>
+            </div>
+            <div class="modal-description" id="modalDescription"></div>
+            <div class="modal-actions">
+                <button class="modal-btn modal-btn-primary" id="modalReadMore">Read Full Article</button>
+                <button class="modal-btn modal-btn-secondary" onclick="closeModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8001/api';
+        let articles = [];
+        let sources = [];
+        let selectedSource = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('refreshBtn').addEventListener('click', refreshFeeds);
+            loadData();
+        });
+
+        async function loadData() {
+            try {
+                await fetchArticles();
+                await fetchSources();
+            } catch (error) {
+                showError('Failed to load articles. Make sure the backend is running on http://localhost:8001');
+                console.error(error);
+            }
+        }
+
+        async function fetchArticles() {
+            try {
+                const url = selectedSource
+                    ? `${API_URL}/articles?limit=50&source=${encodeURIComponent(selectedSource)}`
+                    : `${API_URL}/articles?limit=50`;
+
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('Failed to fetch articles');
+
+                articles = await response.json();
+                renderArticles();
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('error').style.display = 'none';
+            } catch (error) {
+                showError('Failed to fetch articles');
+                throw error;
+            }
+        }
+
+        async function fetchSources() {
+            try {
+                const response = await fetch(`${API_URL}/sources`);
+                if (!response.ok) throw new Error('Failed to fetch sources');
+
+                sources = await response.json();
+                renderFilters();
+            } catch (error) {
+                console.error('Failed to fetch sources', error);
+            }
+        }
+
+        function renderFilters() {
+            const filtersDiv = document.getElementById('filters');
+            filtersDiv.innerHTML = '';
+
+            // All Sources button
+            const allBtn = document.createElement('button');
+            allBtn.className = 'filter-btn active';
+            allBtn.textContent = 'All Sources';
+            allBtn.addEventListener('click', () => {
+                selectedSource = null;
+                updateFilters();
+                loadData();
+            });
+            filtersDiv.appendChild(allBtn);
+
+            // Source buttons
+            sources.forEach(source => {
+                const btn = document.createElement('button');
+                btn.className = 'filter-btn';
+                btn.textContent = `${source.source} (${source.count})`;
+                btn.addEventListener('click', () => {
+                    selectedSource = source.source;
+                    updateFilters();
+                    loadData();
+                });
+                filtersDiv.appendChild(btn);
+            });
+        }
+
+        function updateFilters() {
+            const buttons = document.querySelectorAll('.filter-btn');
+            buttons.forEach(btn => {
+                if (selectedSource === null) {
+                    btn.classList.toggle('active', btn.textContent.includes('All'));
+                } else {
+                    btn.classList.toggle('active', btn.textContent.includes(selectedSource));
+                }
+            });
+        }
+
+        function renderArticles() {
+            const grid = document.getElementById('articlesGrid');
+            const noArticles = document.getElementById('noArticles');
+
+            if (articles.length === 0) {
+                grid.innerHTML = '';
+                noArticles.style.display = 'block';
+                return;
+            }
+
+            noArticles.style.display = 'none';
+            grid.innerHTML = articles.map(article => `
+                <div class="article-card" onclick="openModal(${article.id})">
+                    <div class="article-header">
+                        <h3 class="article-title">${escapeHtml(article.title)}</h3>
+                        <span class="article-source">${escapeHtml(article.source)}</span>
+                    </div>
+                    <p class="article-description">${escapeHtml(cleanHtml(article.description || 'No description available'))}</p>
+                    <div class="article-footer">
+                        <span class="article-date">${formatDate(article.pub_date)}</span>
+                        <a class="read-more" href="javascript:void(0)">Read More →</a>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function openModal(articleId) {
+            const article = articles.find(a => a.id === articleId);
+            if (!article) return;
+
+            document.getElementById('modalTitle').textContent = article.title;
+            document.getElementById('modalSource').textContent = article.source;
+            document.getElementById('modalDate').textContent = formatDate(article.pub_date);
+            document.getElementById('modalDescription').textContent = cleanHtml(article.description || 'No description available');
+
+            const readMoreBtn = document.getElementById('modalReadMore');
+            readMoreBtn.onclick = () => {
+                window.open(article.url, '_blank');
+            };
+
+            document.getElementById('articleModal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('articleModal').style.display = 'none';
+        }
+
+        async function refreshFeeds() {
+            const btn = document.getElementById('refreshBtn');
+            btn.disabled = true;
+            btn.textContent = 'Refreshing...';
+
+            try {
+                const response = await fetch(`${API_URL}/refresh`, { method: 'POST' });
+                if (!response.ok) throw new Error('Refresh failed');
+
+                await loadData();
+                showError(''); // Clear error
+            } catch (error) {
+                showError('Failed to refresh feeds');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Refresh';
+            }
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return 'Date unavailable';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+        }
+
+        function cleanHtml(html) {
+            // Create a temporary div to parse HTML
+            const temp = document.createElement('div');
+            temp.innerHTML = html;
+
+            // Get text content and remove extra whitespace
+            let text = temp.textContent || temp.innerText || '';
+
+            // Decode HTML entities
+            text = decodeHtmlEntities(text);
+
+            // Remove extra whitespace and line breaks
+            text = text.replace(/\s+/g, ' ').trim();
+
+            // Limit to 200 characters for display
+            if (text.length > 200) {
+                text = text.substring(0, 200) + '...';
+            }
+
+            return text;
+        }
+
+        function decodeHtmlEntities(text) {
+            const textarea = document.createElement('textarea');
+            textarea.innerHTML = text;
+            return textarea.value;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            if (message) {
+                errorDiv.textContent = message;
+                errorDiv.style.display = 'block';
+            } else {
+                errorDiv.style.display = 'none';
+            }
+        }
+
+        // Close modal when clicking outside
+        window.addEventListener('click', (event) => {
+            const modal = document.getElementById('articleModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>
